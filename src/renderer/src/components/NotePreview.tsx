@@ -1,7 +1,9 @@
-import { cn, formatDateFromMs } from '@renderer/utils'
+import { useContextMenu } from '@renderer/hooks/useContextMenu'
+import { cn } from '@renderer/utils'
 import { NoteInfo } from '@shared/models'
 import { ComponentProps } from 'react'
 import { IoDocumentTextOutline } from 'react-icons/io5'
+import { ContextMenu } from './ContextMenu/ContextMenu'
 
 export type NotePreviewProps = NoteInfo & {
   isActive?: boolean
@@ -15,7 +17,8 @@ export const NotePreview = ({
   className,
   ...props
 }: NotePreviewProps) => {
-  const date = formatDateFromMs(lastEditTime)
+  const { contextMenuVisible, contextMenuPosition, handleContextMenu, handleCloseContextMenu } =
+    useContextMenu()
 
   return (
     <div
@@ -28,6 +31,7 @@ export const NotePreview = ({
         className
       )}
       {...props}
+      onContextMenu={handleContextMenu} // on right click event raise the context menu
     >
       <div className="my-1 flex items-center h-3">
         <div>
@@ -35,6 +39,17 @@ export const NotePreview = ({
         </div>
         <h3 className="font-bold truncate text-sm text-gray-600">{title}</h3>
       </div>
+      {contextMenuVisible && (
+        <ContextMenu
+          items={[
+            { label: 'Edit', onClick: () => console.info('Edit') },
+            { label: 'Delete', onClick: () => console.info('Delete') },
+            { label: 'Share', onClick: () => console.info('Share') }
+          ]}
+          position={contextMenuPosition}
+          onClose={handleCloseContextMenu}
+        />
+      )}
     </div>
   )
 }
