@@ -4,6 +4,7 @@ import { useAtomValue, useSetAtom } from 'jotai'
 import { useState } from 'react'
 import { NoteDirectoryPreview } from './NoteDirectoryPreview'
 import { NotePreview } from './NotePreview'
+import path from 'path';
 
 export function FileExplorer({ files }) {
   // recursive component
@@ -32,13 +33,17 @@ export function FileExplorer({ files }) {
     return (
       <div>
         <NoteDirectoryPreview name={files.name} onClick={() => handleToggle(files.path)} />
-        <div className={`pl-3 ml-3.5 mr-2 border-l ${expandedFolders[files.path] ? 'block' : 'hidden'}`}>
+        <div
+          className={`pl-3 ml-3.5 mr-2 border-l ${expandedFolders[files.path] ? 'block' : 'hidden'}`}
+        >
           {files.data.map((file) => {
             if (file.type === 'file')
               return (
                 <NotePreview
                   key={file.name} // Added key prop
                   title={file.name}
+                  filePath = {file.path}
+                  file = {file}
                   lastEditTime={file.lastEditTime}
                   onClick={() => handleFileClick(file)}
                 />
@@ -49,7 +54,7 @@ export function FileExplorer({ files }) {
       </div>
     )
   } else if (files.type === 'file') {
-    return <NotePreview title={files.name} lastEditTime={files.lastEditTime} />
+    return <NotePreview title={files.name} lastEditTime={files.lastEditTime} filePath = {files.path} file = {files}/>
   } else {
     return null // Handle case when files is neither folder nor file
   }

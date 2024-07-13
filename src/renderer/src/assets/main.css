@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.prose {
+  font-family: 'CaskaydiaMono Nerd Font', monospace;
+}
+
 @layer base {
   #root {
     @apply h-full;

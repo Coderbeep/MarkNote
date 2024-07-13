@@ -1,9 +1,9 @@
 import { selectedFileAtom, selectedFileContentAtom } from '@renderer/store'
-import { useAtom, useAtomValue } from 'jotai'
+import { useAtomValue, useSetAtom } from 'jotai'
 import { useCallback, useTransition } from 'react'
 
 function useFileExplorer() {
-  const [selectedFile, setSelectedFile] = useAtom(selectedFileAtom)
+  const setSelectedFile = useSetAtom(selectedFileAtom)
   const selectedFileContent = useAtomValue(selectedFileContentAtom)
   const [isPending, startTransition] = useTransition()
 

@@ -10,7 +10,6 @@ export const loadFiles = async () => {
   return x
 }
 
-
 export const selectedFileAtom = atom<FileNode | null>(null)
 
 const selectedFileContentAsyncAtom = atom(async (get) => {
@@ -24,9 +23,7 @@ const selectedFileContentAsyncAtom = atom(async (get) => {
   return content
 })
 
-export const selectedFileContentAtom = atom(
-  (get) => get(selectedFileContentAsyncAtom)
-);
+export const selectedFileContentAtom = atom((get) => get(selectedFileContentAsyncAtom))
 
 export const filesAtomAsync = atom<FileNode | Promise<FileNode>>(loadFiles())
 
@@ -34,22 +31,18 @@ export const filesAtom = unwrap(filesAtomAsync, (prev) => prev)
 
 export const isLoadingFilesAtom = atom<boolean>(true)
 
-export const initializeFilesAtom = atom(
-  null,
-  async (get, set, _arg) => {
-    set(isLoadingFilesAtom, true);
-    try {
-      const fetchedFiles = await window.context.getFiles(''); // Adjust this based on your store API
-      set(filesAtom, fetchedFiles);
-    } catch (error) {
-      console.error('Error loading files:', error);
-      // Handle error state if needed
-    } finally {
-      set(isLoadingFilesAtom, false);
-    }
+export const initializeFilesAtom = atom(null, async (get, set, _arg) => {
+  set(isLoadingFilesAtom, true)
+  try {
+    const fetchedFiles = await window.context.getFiles('') // Adjust this based on your store API
+    set(filesAtom, fetchedFiles)
+  } catch (error) {
+    console.error('Error loading files:', error)
+    // Handle error state if needed
+  } finally {
+    set(isLoadingFilesAtom, false)
   }
-);
-
+})
 
 export const saveFileAtom = atom(null, async (get, set, newContent: string, path: string) => {
   const selectedFile = get(selectedFileAtom)
@@ -61,5 +54,17 @@ export const saveFileAtom = atom(null, async (get, set, newContent: string, path
   // update the last edit time
 })
 
-
 export const expandedFoldersAtom = atom<Record<string, boolean>>({})
+
+export const deleteFileAtom = atom(null, async (get, set, path: string) => {
+  try {
+    await window.context.deleteNote(path)
+
+    // clear the selected file
+    set(selectedFileAtom, null)
+
+    set(initializeFilesAtom, null)
+  } catch (error) {
+    console.error('Failed to delete file:', error)
+  }
+})

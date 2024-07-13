@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 export const useContextMenu = () => {
   const [contextMenuVisible, setContextMenuVisible] = useState(false)

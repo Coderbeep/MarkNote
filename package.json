@@ -21,15 +21,25 @@
     "build:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
+    "@editorjs/editorjs": "^2.30.2",
+    "@editorjs/header": "^2.8.6",
+    "@editorjs/list": "^1.9.0",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
     "@mdxeditor/editor": "^3.7.0",
+    "@muyajs/core": "^0.0.32",
+    "@toast-ui/react-editor": "^3.2.3",
     "fs-extra": "^11.2.0",
+    "intl-segmenter-polyfill": "^0.4.4",
     "jotai": "^2.8.4",
     "lodash": "^4.17.21",
+    "marked": "^13.0.2",
+    "md-editor-v3": "^4.17.3",
+    "rangy": "^1.3.1",
     "react-markdownit": "^2.5.0",
     "react-resizable": "^3.0.5",
-    "react-simplemde-editor": "^5.2.0"
+    "react-simplemde-editor": "^5.2.0",
+    "vue": "^3.4.31"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",

@@ -1,30 +1,77 @@
-import { useEffect, useRef, useState } from 'react'
-import { Content, FloatingNoteTitle, MarkdownEditor, RootLayout, Sidebar } from './components'
-import { ActionButtonsRow } from './components/ActionButtonsRow'
+import { useRef, useState } from 'react'
+import { Content, FloatingNoteTitle, MarkdownEditor, MuyaEditor, RootLayout, Sidebar } from './components'
 import { FileExplorer } from './components/FileExplorer'
-import { filesMock } from './store/mocks'
+import MyMDEditor from './components/myMDEditor'
 
 function App() {
-  // The ref is intiialized with null, and then it is passed to the Content components
   const contentContainerRef = useRef<HTMLDivElement>(null)
+  const muyaRef = useRef<any>(null) // Ref for Muya instance
   const [files, setLoadedFiles] = useState(null)
   const [isLoading, setLoading] = useState(true)
 
-  const resetScroll = () => {
-    contentContainerRef.current?.scrollTo(0, 0) // If the ref is not null, scroll to the top
-  }
+  // useEffect(() => {
+  //   const handleKeyDown = (event: KeyboardEvent) => {
+  //     if (event.ctrlKey && event.key === 'z') {
+  //       event.preventDefault() // Prevent browser's default behavior (like undoing text input)
+  //       muyaRef.current?.undo()
+  //       console.info('Undo')
+  //     }
+  //   }
 
+  //   const handleCtrlClick = (event: MouseEvent) => {
+  //     if (event.ctrlKey) {
+  //       const target = event.target as HTMLElement
+
+  //       let LinkElement: HTMLAnchorElement | null = null
+  //       let childs = target.childNodes as NodeListOf<HTMLElement>
+
+  //       for (let i = 0; i < childs.length; i++) {
+  //         // console.info(childs[i].attributes.getNamedItem('href').value)
+  //         if (childs[i].nodeName === 'A') {
+  //           let value = childs[i].attributes.getNamedItem('href') as Attr
+  //           // extract the value of the href attribute
+  //           let href = value.value
+  //           // print the type of the href attribute
+  //           console.info(href.toString())
+
+  //           if (value) {
+  //             window.open(href.toString(), '_blank') // Open link in a new tab
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+
+  //   // Add event listeners
+  //   document.addEventListener('keydown', handleKeyDown)
+  //   document.addEventListener('click', handleCtrlClick)
+
+  //   return () => {
+  //     // Cleanup: remove event listeners
+  //     document.removeEventListener('keydown', handleKeyDown)
+  //     document.removeEventListener('click', handleCtrlClick)
+  //   }
+  // }, []) // Empty dependency array ensures this effect runs only once
+
+  const resetScroll = () => {
+    contentContainerRef.current?.scrollTo(0, 0)
+  }
 
   return (
     <RootLayout>
       <Sidebar className="p-2">
-        <ActionButtonsRow className="flex justify-between mt-1" />
-        {/* <NotePreviewList className="mt2 space-y-1" onSelect={resetScroll} /> */}
-        {<FileExplorer files={null}/>}
+        <FileExplorer files={null} />
       </Sidebar>
-      <Content ref={contentContainerRef} className="border-l bg-zinc-900/50 border-l-white/20">
-        <FloatingNoteTitle />
-        <MarkdownEditor />
+      <Content ref={contentContainerRef} className="border-l border-l-white/20 text-slate-800">
+        {/* <FloatingNoteTitle /> */}
+        {/* <MarkdownEditor /> */}
+        {/* <div contentEditable={true}> </div> */}
+        {/* <MyMDEditor /> */}
+        <MuyaEditor muyaRef={muyaRef} />
+        {/* <EditorJsComponent /> */}
+        {/* <MyMDEditor /> */}
+        {/* <newEditor /> */}
+        {/* <ReactEditorMD /> */}
       </Content>
     </RootLayout>
   )

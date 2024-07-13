@@ -130,8 +130,6 @@ export const createNote: CreateNote = async () => {
 }
 
 export const deleteNote: DeleteNote = async (filename) => {
-  const rootDir = getRootDir()
-
   const { response } = await dialog.showMessageBox({
     type: 'warning',
     title: 'Delete note',
@@ -147,6 +145,6 @@ export const deleteNote: DeleteNote = async (filename) => {
   }
 
   console.info(`Deleting note: ${filename}`)
-  await remove(`${rootDir}/${filename}.md`)
+  await remove(`${filename}`)
   return true
 }
