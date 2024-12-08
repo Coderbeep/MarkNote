@@ -11,7 +11,6 @@ $ yarn
 ```bash
 $ yarn dev
 ```
-
 ### Build
 
 ```bash
@@ -24,7 +23,3 @@ $ yarn build:mac
 # For Linux
 $ yarn build:linux
 ```
-
-1. Jakub
-2. Kubiak
-dasasd
