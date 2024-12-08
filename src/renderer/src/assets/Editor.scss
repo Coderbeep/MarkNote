@@ -1,0 +1,132 @@
+@import 'Colors';
+@import 'Headings';
+@import 'Emphasis';
+@import 'Lists';
+@import 'Frontmatter';
+@import 'ContextMenu';
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@mixin default-font {
+  font-family:
+    Outfit,
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe UI,
+    Roboto,
+    Oxygen-Sans,
+    Ubuntu,
+    Cantarell,
+    Helvetica Neue,
+    sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: $foreground-color;
+  text-rendering: optimizeLegibility;
+}
+
+.cm-image-widget {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+.cm-window {
+  margin: 20px;
+  border: 2px solid $border-color;
+  background-color: $background-color-primary;
+  @apply rounded-3xl my-16 mr-2 overflow-auto;
+}
+
+.cm-content {
+  @include default-font;
+  padding: 20px;
+}
+
+.h-full {
+  padding: 20px 50px 0px 50px;
+  outline-color: red;
+}
+
+.cm-editor {
+  height: inherit;
+
+  &.cm-focused {
+    outline: none;
+  }
+}
+
+.cm-scroller {
+  background-color: $background-color-primary;
+}
+
+.cm-gutters {
+  display: none !important;
+}
+
+.cm-content {
+  font-family:
+    CascaydiaCode Nerd Font,
+    monospace;
+}
+
+.cm-horizontal-rule-widget-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: -10px 0;
+}
+
+.cm-horizontal-rule-widget-container hr {
+  width: 100%;
+  border: none;
+  border-top: 2px solid $border-color;
+  margin: 0;
+}
+
+.cm-line:has(.cm-horizontal-rule-widget-container) {
+  height: 19.59px;
+  padding: 0px;
+}
+
+.cm-widgetBuffer {
+  height: 0 !important;
+}
+
+.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
+.cm-selectionBackground,
+.cm-content ::selection {
+  background-color: mix(transparent, $significant-color-first, 60%) !important;
+}
+
+.cm-line {
+  position: relative;
+}
+
+.cm-activeLine {
+  &.cm-line {
+    background-color: mix(transparent, $background-focus-line, 50%) !important;
+  }
+}
+
+table {
+  border-collapse: collapse;
+  border: 1px solid $border-color;
+
+  th,
+  td {
+    border: 1px solid $border-color;
+    padding: 5px;
+  }
+}
+
+//////////////////////////////////////////////////////////

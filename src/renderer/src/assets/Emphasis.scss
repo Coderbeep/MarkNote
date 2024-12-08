@@ -1,0 +1,115 @@
+@import './Colors';
+
+strong, .cm-bold-marker, .cm-bold-text {
+    font-weight: bold;
+    color: $significant-color-third;
+}
+
+.cm-formatting-bold-text {
+    font-weight: bold;
+    color: $significant-color-third;
+}
+
+em, .cm-italic-marker, .cm-italic-text {
+    font-style: italic;
+    color: $significant-color-second;
+}
+  
+.cm-formatting-italic-text {
+    font-style: italic;
+    color: $significant-color-second;
+}
+
+.cm-inline-code-text {
+    background-color: $background-color-secondary;
+    padding: 0.1em 0.25em;
+    border-radius: 4px;
+}
+
+.cm-formatting-inline-code-text {
+    background-color: $background-color-secondary;
+    padding: 0.1em 0.25em;
+    border-radius: 4px;
+}
+
+.cm-line:has(.cm-formatting-codeblock) {
+    background-color: $background-color-secondary;
+}
+
+.cm-formatting-codeblock-line {
+    background-color: $background-color-secondary;
+    display: block;
+}
+.cm-formatting-codeblock-line-begin {
+    background-color: $background-color-secondary;
+    display: block;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.cm-formatting-codeblock-line-end {
+    background-color: $background-color-secondary;
+    display: block;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.cm-line {
+    &.cm-activeLine {
+        .cm-formatting-blockquote {
+            color: $foreground-color;
+        }
+    }
+
+    .cm-formatting-blockquote {
+        color: transparent;
+    
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: $significant-color-first;
+        }
+    }
+}
+
+.cm-formatting-input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    border: 1px solid $foreground-color;
+    border-radius: 4px;
+    cursor: pointer;
+    vertical-align: middle;
+    margin-right: 5px;
+
+    &:checked {
+        background-color: $significant-color-second;
+        border-color: $significant-color-second;
+    }
+
+    &:checked::after {
+        content: '\2714'; 
+        display: block;
+        color: white;
+        font-size: 15px;
+        text-align: center;
+        line-height: 12px;
+    }
+
+    &:hover {
+        border-color: $significant-color-second;
+    }
+}
+
+
+.cm-line:has(.cm-formatting-input:checked):has(.list-item-content-unordered) {
+    .list-item-content-unordered {
+        // text-decoration: line-through;
+        color: $foreground-color-light;
+    }
+}

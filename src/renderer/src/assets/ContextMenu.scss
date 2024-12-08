@@ -1,0 +1,22 @@
+@import 'Colors';
+
+.context-menu {
+  position: absolute;
+  z-index: 1000;
+  background-color: $context-menu-background;
+  border: 2px solid $border-color;
+  padding: 5px;
+  border-radius: 8px;
+
+  .context-menu-item {
+    padding: 2px 5px 2px 5px;
+    cursor: pointer;
+    color: $foreground-color;
+    font-size: 14px;
+    border-radius: 5px;
+
+    &:hover {
+      background-color: $context-menu-item-hover;
+    }
+  }
+}
