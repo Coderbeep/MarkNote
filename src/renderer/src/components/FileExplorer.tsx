@@ -7,6 +7,45 @@ interface FileExplorerProps {
     onFileSelect: (filePath: string) => void;
 }
 
+interface FileItemProps {
+    file: FileItem;
+    openDirectories: Record<string, boolean>;
+    onFileSelect: (filePath: string) => void;
+    onDirectorySelect: (directoryPath: string) => void;
+    level: number;
+}
+
+const FileItemComponent = memo(({ file, openDirectories, onFileSelect, onDirectorySelect, level }: FileItemProps) => {
+    return (
+        <div>
+            <div
+                className='file-explorer-item'
+                style={{ marginLeft: `${level}em` }}
+                onClick={() => {
+                    if (file.isDirectory) {
+                        onDirectorySelect(file.path);
+                    } else {
+                        onFileSelect(file.path);
+                    }
+                }}
+            >
+                {file.isDirectory ? <GoFileDirectory /> : <GoFile />}
+                <span> {file.filename} </span>
+            </div>
+
+            {file.isDirectory && openDirectories[file.path] && file.children && file.children.map((childFile) => (
+                <FileItemComponent
+                    key={childFile.path}
+                    file={childFile}
+                    openDirectories={openDirectories}
+                    onFileSelect={onFileSelect}
+                    onDirectorySelect={onDirectorySelect}
+                    level={level + 1} />
+            ))}
+        </div>
+    );
+});
+
 export const FileExplorer = memo(({ directoryPath, onFileSelect }: FileExplorerProps) => {
     const [files, setFiles] = useState<FileItem[]>([]);
     const [openDirectories, setOpenDirectories] = useState<Record<string, boolean>>({});
@@ -53,12 +92,22 @@ export const FileExplorer = memo(({ directoryPath, onFileSelect }: FileExplorerP
 
     const collapseDirectory = (files: FileItem[], directoryPath: string): FileItem[] => {
         let newFiles: FileItem[] = [];
+
         for (const file of files) {
             if (file.path === directoryPath) {
                 newFiles.push({ ...file, isOpen: false, children: [] });
-            } else if (!file.path.startsWith(directoryPath)) {
-                newFiles.push(file);
+                continue;
             }
+            if (file.path.startsWith(directoryPath)) {
+                setOpenDirectories(prevState => {
+                    const newState = {...prevState};
+                    delete newState[file.path];
+                    return newState
+                })
+                continue
+            }
+                
+            newFiles.push(file)
         }
         return newFiles;
     };
@@ -94,48 +143,16 @@ export const FileExplorer = memo(({ directoryPath, onFileSelect }: FileExplorerP
                 <span>Notes</span>
             </div>
             <div className='file-explorer-list'>
-                {files.map((file) => {
-                    return (
-                        <div key={file.path}>
-                            <div
-                                className='file-explorer-item'
-                                style={{ marginLeft: `${file.level || 0}em` }}
-                                onClick={() => {
-                                    if (file.isDirectory) {
-                                        onDirectorySelect(file.path);
-                                    } else {
-                                        onFileSelect(file.path);
-                                    }
-                                }}
-                            >
-                                {file.isDirectory ? <GoFileDirectory /> : <GoFile />}
-                                <span> {file.filename} </span>
-                            </div>
-
-                            {file.isDirectory && openDirectories[file.path] && file.children && (
-                                <div className='file-explorer-nested'>
-                                    {file.children.map((childFile) => (
-                                        <div
-                                            key={childFile.path}
-                                            className='file-explorer-item'
-                                            style={{ marginLeft: `${(file.level || 0) + 1}em` }}
-                                            onClick={(e) => {
-                                                if (childFile.isDirectory) {
-                                                    onDirectorySelect(childFile.path);
-                                                } else {
-                                                    onFileSelect(childFile.path);
-                                                }
-                                            }}
-                                        >
-                                            {childFile.isDirectory ? <GoFileDirectory /> : <GoFile />}
-                                            <span> {childFile.filename} </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
+                {files.map((file) => (
+                    <FileItemComponent
+                        key={file.path}
+                        file={file}
+                        openDirectories={openDirectories}
+                        onFileSelect={onFileSelect}
+                        onDirectorySelect={onDirectorySelect}
+                        level={file.level || 0}
+                    />
+                ))}
             </div>
         </div>
     );
