@@ -2,8 +2,9 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { BrowserWindow, app, dialog, ipcMain, shell } from 'electron'
 import path, { join } from 'path'
 import icon from '../../resources/icon.png?asset'
-import fs, { readFileSync } from 'fs'
+import { readFile, readdir, stat } from 'fs/promises'
 import { notesDirectoryPath } from '@shared/constants'
+import { FileItem } from '@shared/models'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -72,26 +73,40 @@ ipcMain.handle('open-folder-dialog', async () => {
   });
 
   if (result.canceled) return [];
-  else {
-    const folderPath = result.filePaths[0];
-    const files = fs.readdirSync(folderPath);
-    return files;
-  }
+
+  const folderPath = result.filePaths[0];
+  const files = readdir(folderPath);
+  return files;
 })
 
-ipcMain.handle('get-files', async (_, folderPath: string) => {
-  const files = fs.readdirSync(folderPath);
+ipcMain.handle('get-files', async (_, directoryPath: string) => {
+  const files: FileItem[] = [];
+  const filenames = await readdir(directoryPath);
+
+  for (const filename of filenames) {
+    const filePath = path.join(directoryPath, filename);
+    const fileStat = await stat(filePath);
+
+    const fileItem: FileItem = {
+      filename: filename,
+      path: filePath,
+      isDirectory: fileStat.isDirectory(),
+    }
+
+    files.push(fileItem);
+  }
+
   return files;
 });
 
 ipcMain.handle('open-file', async (_, filePath: string) => {
   try {
     const fullPath = path.resolve(notesDirectoryPath, filePath);
-
-    const content = readFileSync(fullPath, 'utf-8');
+    const content = await readFile(fullPath, 'utf-8');
     return content;
   } catch (err) {
     console.error('Error reading file:', err);
     return '';
   }
 });
+

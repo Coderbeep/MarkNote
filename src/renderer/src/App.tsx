@@ -23,7 +23,7 @@ function App() {
       <Sidebar>
         <FileExplorer directoryPath={notesDirectoryPath} onFileSelect={openFile} />
       </Sidebar>
-      <Content className="border-l border-l-white/20">
+      <Content>
         <Editor text={text} setText={setText}/>
       </Content>
     </RootLayout>

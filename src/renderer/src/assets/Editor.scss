@@ -21,6 +21,7 @@
   padding: 10px;
   box-sizing: border-box;
   flex-direction: row;
+  overflow-x: hidden;
 }
 
 .content {
@@ -37,7 +38,7 @@
 }
 
 .resizer {
-  width: 3px;
+  width: 5px;
   cursor: ew-resize;
 
   &:hover {
@@ -49,6 +50,7 @@
 .file-explorer {
   color: $gray-4;
   margin-right: 0.5em;
+
 
   .file-explorer-category {
     color: $gray-5;
@@ -79,6 +81,13 @@
       background-color: $gray-3;
       color: $gray-5;
       transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
     }
   }
 }

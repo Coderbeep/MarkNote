@@ -18,7 +18,7 @@ export const Sidebar = ({ className, children, ...props }: ComponentProps<'div'>
       style={{ width: `${width}px` }}
       {...props}
     >
-      <div style={{ flexGrow: 1 }}>
+      <div style={{ flexGrow: 1, overflow: 'hidden' }}>
         {children}
       </div>
       <Resizer width={width} setWidth={setWidth} />
