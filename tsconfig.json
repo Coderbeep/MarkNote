@@ -1,0 +1,15 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.web.json"
+    }
+  ],
+  "include": [
+    "src", // Your source code
+    "env.d.ts" // Add this if not implicitly included
+  ]
+}

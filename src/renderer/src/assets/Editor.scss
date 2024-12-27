@@ -1,0 +1,243 @@
+@import 'Colors';
+@import 'Headings';
+@import 'Emphasis';
+@import 'Lists';
+@import 'Frontmatter';
+@import 'ContextMenu';
+
+.root-layout {
+  display: flex;
+  height: 100vh;
+  font-size: 1rem;
+  font-family: Inter, ui-sans-serif, system-ui;
+  overflow: hidden;
+  margin: 0;
+}
+
+.sidebar {
+  display: flex;
+  flex-shrink: 0;
+  height: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  flex-direction: row;
+}
+
+.content {
+  flex-grow: 1;
+  background-color: white;
+  height: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.file-explorer-header {
+  display: flex;
+  gap: 0.8em;
+}
+
+.resizer {
+  width: 3px;
+  cursor: ew-resize;
+
+  &:hover {
+    background-color: $gray-2;
+  }
+}
+
+
+.file-explorer {
+  color: $gray-4;
+  margin-right: 0.5em;
+
+  .file-explorer-category {
+    color: $gray-5;
+    font-weight: bold;
+    margin-top: 0.7em;
+    font-size: 0.9rem;
+  }
+}
+
+.file-explorer-list {
+  margin-top: 0.5em;
+
+  .file-explorer-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    padding: 0.2em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+
+    &.selected {
+      background-color: $background-focus-line;
+
+    }
+
+    &:hover {
+      background-color: $gray-3;
+      color: $gray-5;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+  }
+}
+
+
+.file-explorer-button {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: white;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid $gray-2;
+
+  svg {
+    width: 1.4em;
+    height: 1.4em;
+  }
+
+  span {
+    margin-left: 0.3em;
+    vertical-align: auto;
+  }
+
+  &.add-button {
+    flex-grow: 1;
+  }
+
+  &:hover {
+    border: 1px solid $foreground-color;
+    cursor: pointer;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+@mixin default-font {
+  font-size: 16px;
+  // font-weight: 500;
+  // color: $foreground-color;
+  // text-rendering: optimizeLegibility;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.cm-image-widget {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+.cm-window {
+  border: 2px solid $border-color;
+  background-color: $background-color-primary;
+  height: 100%;
+  min-height: 100vh;
+  justify-content: center;
+  display: flex;
+}
+
+.h-full {
+  padding: 20px 50px 0px 50px;
+  outline-color: red;
+  width: 50em;
+}
+
+.cm-editor {
+  height: inherit;
+
+  &.cm-focused {
+    outline: none;
+  }
+}
+
+.cm-scroller {
+  background-color: $background-color-primary;
+}
+
+.cm-gutters {
+  display: none !important;
+}
+
+.cm-content {
+  font-family:
+    CascaydiaCode Nerd Font,
+    monospace;
+}
+
+.cm-horizontal-rule-widget-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: -10px 0;
+}
+
+.cm-horizontal-rule-widget-container hr {
+  width: 100%;
+  border: none;
+  border-top: 2px solid $border-color;
+  margin: 0;
+}
+
+.cm-line:has(.cm-horizontal-rule-widget-container) {
+  height: 19.59px;
+  padding: 0px;
+}
+
+.cm-widgetBuffer {
+  height: 0 !important;
+}
+
+.cm-focused>.cm-scroller>.cm-selectionLayer .cm-selectionBackground,
+.cm-selectionBackground,
+.cm-content ::selection {
+  background-color: mix(transparent, $significant-color-first, 60%) !important;
+}
+
+.cm-line {
+  position: relative;
+}
+
+.cm-activeLine {
+  &.cm-line {
+    background-color: mix(transparent, $background-focus-line, 50%) !important;
+  }
+}
+
+table {
+  border-collapse: collapse;
+  border: 1px solid $border-color;
+
+  th,
+  td {
+    border: 1px solid $border-color;
+    padding: 5px;
+  }
+}
+
+//////////////////////////////////////////////////////////

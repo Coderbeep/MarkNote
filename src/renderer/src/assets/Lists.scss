@@ -1,0 +1,64 @@
+// STYLING FOR LISTS
+
+
+.cm-listA-indent::before {
+  margin-inline-start: 4px;
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: $border-color; 
+}
+
+.cm-line {
+  @for $i from 1 through 10 {
+    &.cm-listA-line-level-#{$i} {
+      padding-inline-start: 23px + 34px * ($i - 1);
+      text-indent: -17px - 34px * ($i - 1);
+    }
+  }
+
+  @for $i from 1 through 10 {
+    &.cm-listA-line-noBullet-level-#{$i} {
+      padding-inline-start: 23px + 34px * ($i - 1);
+      text-indent: ($i - 1) * -34px;
+
+      .cm-listA-indent::before {
+        margin-inline-start: -13px;
+      }
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////
+
+.cm-listB-indent::before {
+  margin-inline-start: 4px;
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: $border-color; 
+}
+
+.cm-line {
+  @for $i from 1 through 10 {
+    &.cm-listB-line-level-#{$i} {
+      padding-inline-start: 31px + 34px * ($i - 1);
+      text-indent: -25px - 34px * ($i - 1);
+    }
+  }
+
+  @for $i from 1 through 10 {
+    &.cm-listB-line-noBullet-level-#{$i} {
+      padding-inline-start: 31px + 34px * ($i - 1);
+      text-indent: ($i - 1) * -34px;
+
+      .cm-listB-indent::before {
+        margin-inline-start: -21px;
+      }
+    }
+  }
+}
