@@ -1,24 +1,6 @@
 import { syntaxTree } from '@codemirror/language';
-import { RangeSetBuilder, StateEffect, StateField } from "@codemirror/state";
-import { Decoration, EditorView, WidgetType } from "@codemirror/view";
-
-const toggleHorizontalRuleEffect = StateEffect.define();
-
-const horizontalRuleField = StateField.define({
-    create() {
-        return Decoration.none;
-    },
-    update(decorations, transaction) {
-        decorations = decorations.map(transaction.changes);
-        for (let effect of transaction.effects) {
-            if (effect.is(toggleHorizontalRuleEffect)) {
-                decorations = effect.value;
-            }
-        }
-        return decorations;
-    },
-    provide: field => EditorView.decorations.from(field)
-})
+import { Decoration, ViewPlugin, WidgetType } from '@codemirror/view';
+import { RangeSetBuilder } from '@codemirror/state';
 
 function createHorizontalLineDecorations(view) {
     const builder = new RangeSetBuilder();
@@ -30,14 +12,14 @@ function createHorizontalLineDecorations(view) {
             if (node.name === 'FrontmatterMark') {
                 lastYAMLMark = node.from;
             }
-            if (node.name === 'HorizontalRule' && lastYAMLMark != node.from) {
+            if (node.name === 'HorizontalRule' && lastYAMLMark !== node.from) {
                 const isActive = from >= node.from && to <= node.to;
 
                 if (!isActive) {
                     builder.add(node.from, node.to, Decoration.widget({
                         widget: new HorizontalRuleWidget(),
                         block: false
-                    }))
+                    }));
                 }
             }
         }
@@ -45,13 +27,6 @@ function createHorizontalLineDecorations(view) {
 
     return builder.finish();
 }
-
-function toggleHorizontalRuleVisibility(view) {
-    view.dispatch({
-        effects: toggleHorizontalRuleEffect.of(createHorizontalLineDecorations(view))
-    });
-}
-
 
 class HorizontalRuleWidget extends WidgetType {
     constructor() {
@@ -71,11 +46,22 @@ class HorizontalRuleWidget extends WidgetType {
     }
 }
 
-export const HorizontalRuleExtension = [
-    horizontalRuleField,
-    EditorView.updateListener.of((update) => {
-        if (update.selectionSet){
-            toggleHorizontalRuleVisibility(update.view);
+export const HorizontalRuleExtension = ViewPlugin.fromClass(class {
+    decorations;
+
+    constructor(view) {
+        this.decorations = createHorizontalLineDecorations(view);
+    }
+
+    update(update) {
+        if (update.docChanged || update.selectionSet) {
+            this.decorations = createHorizontalLineDecorations(update.view);
         }
-    })
-]
+    }
+
+    get decorationss() {
+        return this.decorations;
+    }
+}, {
+    decorations: v => v.decorations
+});

@@ -1,12 +1,13 @@
-import { foldNodeProp } from '@codemirror/language';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
-import { styleTags, Tag, tags } from '@lezer/highlight';
+import { styleTags, Tag } from '@lezer/highlight';
 import { Element, MarkdownExtension } from '@lezer/markdown';
 import { RangeSetBuilder, StateEffect, StateField } from '@uiw/react-codemirror';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { IoSettingsOutline } from "react-icons/io5";
 import { parseYAML } from '../hooks/YAMLutils';
+import { syntaxTree } from '@codemirror/language';
+
 /*
 Parsing YAML frontmatter in markdown files.
 - The frontmatter is parsed only at the beginning of the file
@@ -17,12 +18,9 @@ Parsing YAML frontmatter in markdown files.
 const frontMatterFence = /^---\s*$/;
 
 const frontmatterTags = {
-	Frontmatter: Tag.define(tags.heading1),
+	Frontmatter: Tag.define(),
 	FrontmatterMark: Tag.define(),
-};
-
-let frontmatterRange = { start: 0, end: 0 };
-let YAMLContent = '';
+}
 
 export const frontmatter: MarkdownExtension = {
 	defineNodes: [{ name: 'Frontmatter', block: true }, 'FrontmatterMark'],
@@ -31,17 +29,13 @@ export const frontmatter: MarkdownExtension = {
 			Frontmatter: frontmatterTags.Frontmatter,
 			FrontmatterMark: frontmatterTags.FrontmatterMark,
 		}),
-		foldNodeProp.add({
-			// Frontmatter: foldInside,
-			FrontmatterMark: () => null
-		})
 	],
 	parseBlock: [
 		{
 			name: 'Frontmatter',
 			before: 'HorizontalRule',
 			parse: (cx, line) => {
-			    let end: number;
+				let end: number;
 				const children = new Array<Element>();
 				if (cx.lineStart === 0 && frontMatterFence.test(line.text)) {
 					// 4 is the length of the frontmatter fence (---\n).
@@ -50,20 +44,14 @@ export const frontmatter: MarkdownExtension = {
 						if (frontMatterFence.test(line.text)) {
 							end = cx.lineStart + 4;
 							children.push(cx.elt('FrontmatterMark', end - 4, end));
-
 							cx.addElement(cx.elt('Frontmatter', 0, end, children));
-
-							frontmatterRange = { start: 0, end: end }
 							return true;
 						}
 					}
-
-				} 
+				}
 				return false;
 			},
-
 		}
-
 	]
 };
 
@@ -84,7 +72,10 @@ const frontmatterVisibilityField = StateField.define({
 		return Decoration.none;
 	},
 	update(decorations, transaction) {
-		decorations = decorations.map(transaction.changes);
+		if (transaction.docChanged) {
+			return Decoration.none;
+		}
+
 		for (let effect of transaction.effects) {
 			if (effect.is(toggleFrontmatterVisibilityEffect)) {
 				decorations = effect.value;
@@ -98,56 +89,69 @@ const frontmatterVisibilityField = StateField.define({
 function createFrontmatterDecorations(view) {
 	const builder = new RangeSetBuilder();
 	const { from, to } = view.state.selection.main;
+	let hasFrontmatter = false;
 
-	const frontmatterActive = from >= frontmatterRange.start && to <= frontmatterRange.end;
+	syntaxTree(view.state).iterate({
+		enter: (node) => {
+			if (node.name === 'Frontmatter') {
+				hasFrontmatter = true;
+				const isActive = from >= node.from && to <= node.to;
+				if (!isActive) {
+					builder.add(
+						node.from,
+						node.to,
+						Decoration.widget({
+							widget: new PropertiesWidget(node.from, node.to),
+							block: true,
+							side: 1
+						})
+					)
+				}
+			}
+		}
+	})
 
-	if (!frontmatterActive) {
-		builder.add(frontmatterRange.start, frontmatterRange.end - 1, Decoration.widget({
-			widget: new PropertiesWidget(),
-			block: true
-		}));
-	}
-
-	return builder.finish();
+	return hasFrontmatter ? builder.finish() : Decoration.none;
 }
 
 function toggleVisibility(view) {
-	const decorations = createFrontmatterDecorations(view);
 	view.dispatch({
-		effects: toggleFrontmatterVisibilityEffect.of(decorations),
+		effects: toggleFrontmatterVisibilityEffect.of(createFrontmatterDecorations(view)),
 	});
 }
 
 let cachedHeight = -1;
 
 class PropertiesWidget extends WidgetType {
-	constructor() {
-        super();
-    }
+	constructor(start, end) {
+		super();
+		this.start = start;
+		this.end = end;
+	}
 
-    toDOM(view) {
-        const container = document.createElement('div');
-        container.className = 'cm-properties-widget';
+	toDOM(view) {
+		const container = document.createElement('div');
+		container.className = 'cm-properties-widget';
 
-        const anotherDiv = document.createElement('div');
-        anotherDiv.className = 'cm-property-container';
-        
-        const parsedYAML = parseYAML(view.state.sliceDoc(frontmatterRange.start + 4, frontmatterRange.end - 5));
-        for (const key in parsedYAML) {
-            const div = document.createElement('div');
-            div.className = 'cm-property';
+		const anotherDiv = document.createElement('div');
+		anotherDiv.className = 'cm-property-container';
 
-            const keyContainer = document.createElement('div');
-            keyContainer.className = 'cm-key-container';
+		const parsedYAML = parseYAML(view.state.sliceDoc(this.start + 4, this.end - 5));
+		for (const key in parsedYAML) {
+			const div = document.createElement('div');
+			div.className = 'cm-property';
+
+			const keyContainer = document.createElement('div');
+			keyContainer.className = 'cm-key-container';
 
 			const keyName = document.createElement('div');
 			keyName.className = 'cm-key-name';
 			keyName.textContent = `${key}`;
 
 
-            const valuesContainer = document.createElement('div');
-            valuesContainer.className = 'cm-value-container';
-            const value = parsedYAML[key]
+			const valuesContainer = document.createElement('div');
+			valuesContainer.className = 'cm-value-container';
+			const value = parsedYAML[key]
 
 			const iconElement = React.createElement(IoSettingsOutline, { size: 18 });
 			const icon = ReactDOMServer.renderToString(iconElement);
@@ -158,41 +162,41 @@ class PropertiesWidget extends WidgetType {
 			keyContainer.appendChild(iconContainer);
 			keyContainer.appendChild(keyName);
 
-            if (Array.isArray(value)) {
-                value.forEach(elem => {
-                    const span = document.createElement('span');
-                    span.textContent = elem;
-                    span.className = 'cm-value-item';
-                    valuesContainer.appendChild(span);
-                });
-            } else {
-                const span = document.createElement('span');
-                span.textContent = value;
-                span.className = 'cm-value-item';
-                valuesContainer.appendChild(span);
-            }
-            
-            div.appendChild(keyContainer);
-            div.appendChild(valuesContainer);
-            anotherDiv.appendChild(div);
-        }
+			if (Array.isArray(value)) {
+				value.forEach(elem => {
+					const span = document.createElement('span');
+					span.textContent = elem;
+					span.className = 'cm-value-item';
+					valuesContainer.appendChild(span);
+				});
+			} else {
+				const span = document.createElement('span');
+				span.textContent = value;
+				span.className = 'cm-value-item';
+				valuesContainer.appendChild(span);
+			}
 
-        container.appendChild(anotherDiv);
+			div.appendChild(keyContainer);
+			div.appendChild(valuesContainer);
+			anotherDiv.appendChild(div);
+		}
 
-        container.onclick = () => {
-            view.dispatch({
-                selection: { anchor: frontmatterRange.end - 1 }
-            })
-        }
+		container.appendChild(anotherDiv);
 
-		if (container.offsetHeight === 0) { 
+		container.onclick = () => {
+			view.dispatch({
+				selection: { anchor: this.end - 1 }
+			})
+		}
+
+		if (container.offsetHeight === 0) {
 			const observer = new MutationObserver(() => {
 				cachedHeight = container.offsetHeight;
-				
+
 				if (cachedHeight > 0) {
 					observer.disconnect();
 					view.requestMeasure();
-				} 
+				}
 			})
 
 			observer.observe(container, {
@@ -200,10 +204,10 @@ class PropertiesWidget extends WidgetType {
 				subtree: true,
 				attributes: true
 			});
-		}	
+		}
 
-        return container;
-    }
+		return container;
+	}
 
 	get estimatedHeight() {
 		return cachedHeight;
@@ -212,10 +216,10 @@ class PropertiesWidget extends WidgetType {
 
 
 export const FrontmatterExtension = [
-  frontmatterVisibilityField,
-  EditorView.updateListener.of(update => {
-    if (update.selectionSet) {
-      toggleVisibility(update.view);
-    }
-  }),
-]
+	frontmatterVisibilityField,
+	EditorView.updateListener.of(update => {
+		if (update.docChanged || update.selectionSet) {
+			toggleVisibility(update.view);
+		}
+	}),
+];

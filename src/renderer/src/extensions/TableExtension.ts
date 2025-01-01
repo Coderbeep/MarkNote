@@ -6,47 +6,50 @@ import markdoc from '@markdoc/markdoc';
 const toggleTableEffect = StateEffect.define();
 
 const tableField = StateField.define({
-    create() {
-        return Decoration.none;
-    },
-    update(decorations, transaction) {
-        decorations = decorations.map(transaction.changes);
-        for (let effect of transaction.effects) {
-            if (effect.is(toggleTableEffect)) {
-                decorations = effect.value;
-            }
-        }
-        return decorations;
-    },
-    provide: field => EditorView.decorations.from(field)
+  create() {
+    return Decoration.none;
+  },
+  update(decorations, transaction) {
+    if (transaction.docChanged) {
+      return Decoration.none;
+    }
+
+    for (let effect of transaction.effects) {
+      if (effect.is(toggleTableEffect)) {
+        decorations = effect.value;
+      }
+    }
+    return decorations;
+  },
+  provide: field => EditorView.decorations.from(field)
 })
 
 
 function createTableDecorations(view) {
-    const builder = new RangeSetBuilder();
-    const { from, to } = view.state.selection.main;
+  const builder = new RangeSetBuilder();
+  const { from, to } = view.state.selection.main;
 
-    syntaxTree(view.state).iterate({
-        enter: (node) => { 
-          if (node.name === 'Table') {
-            const isActive = from >= node.from && to <= node.to;
-            if (!isActive) {
-              builder.add(node.from, node.to, Decoration.widget({
-                widget: new TableWidget(view.state.sliceDoc(node.from, node.to)),
-                block: true,
-                side: 1
-              }))
-            }
-          }
+  syntaxTree(view.state).iterate({
+    enter: (node) => {
+      if (node.name === 'Table') {
+        const isActive = from >= node.from && to <= node.to;
+        if (!isActive) {
+          builder.add(node.from, node.to, Decoration.widget({
+            widget: new TableWidget(view.state.sliceDoc(node.from, node.to)),
+            block: true,
+            side: 1
+          }))
         }
-    });
-    return builder.finish();
+      }
+    }
+  });
+  return builder.finish();
 }
 
 function toggleTableVisibility(view) {
-    view.dispatch({
-        effects: toggleTableEffect.of(createTableDecorations(view))
-    });
+  view.dispatch({
+    effects: toggleTableEffect.of(createTableDecorations(view))
+  });
 }
 
 
@@ -73,7 +76,7 @@ class TableWidget extends WidgetType {
     cells.forEach((cell) => {
       cell.setAttribute('contenteditable', 'true');
 
-      cell.addEventListener('input', (e) =>  this.handleCellInput(e, cell, view));
+      cell.addEventListener('input', (e) => this.handleCellInput(e, cell, view));
     })
 
     return container;
@@ -87,10 +90,10 @@ class TableWidget extends WidgetType {
 }
 
 export const TableExtension = [
-    tableField,
-    EditorView.updateListener.of((update) => {
-        if (update.selectionSet){
-            toggleTableVisibility(update.view);
-        }
-    })
+  tableField,
+  EditorView.updateListener.of((update) => {
+    if (update.docChanged || update.selectionSet) {
+      toggleTableVisibility(update.view);
+    }
+  })
 ]

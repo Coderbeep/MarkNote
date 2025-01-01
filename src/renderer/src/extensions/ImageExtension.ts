@@ -16,7 +16,6 @@ const imageField = StateField.define({
         return Decoration.none;
     },
     update(decorations, transaction) {
-        decorations = decorations.map(transaction.changes);
         for (let effect of transaction.effects) {
             if (effect.is(toggleImageEffect)) {
                 decorations = effect.value;
@@ -25,7 +24,7 @@ const imageField = StateField.define({
         return decorations;
     },
     provide: field => EditorView.decorations.from(field)
-})
+});
 
 function createImageDecorations(view) {
     const builder = new RangeSetBuilder();
@@ -37,7 +36,7 @@ function createImageDecorations(view) {
               const isActive = from >= node.from && to <= node.to;
               if (!isActive) {
                 builder.add(node.from, node.to, Decoration.replace({
-                  block:  true,
+                  block: true,
                 }));
               }
 
@@ -45,7 +44,7 @@ function createImageDecorations(view) {
                 widget: new ImageWidget(),
                 block: true,
                 side: 1
-            }))
+            }));
           }
         }
     });
@@ -59,13 +58,12 @@ function toggleImageVisibility(view) {
     });
 }
 
-
 class ImageWidget extends WidgetType {
   constructor() {
     super();
   }
 
-  toDOM(view: EditorView) {
+  toDOM(view) {
     const container = document.createElement('div');
     container.className = 'cm-image-widget';
 
@@ -82,11 +80,10 @@ class ImageWidget extends WidgetType {
       console.log('Right click on image widget');
     });
 
-
     return container;
   }
 
-  destroy(dom: HTMLElement): void {
+  destroy(dom) {
     dom.remove();
   }
 
@@ -98,8 +95,8 @@ class ImageWidget extends WidgetType {
 export const ImageExtension = [
     imageField,
     EditorView.updateListener.of((update) => {
-        if (update.selectionSet){
+        if (update.docChanged || update.selectionSet) {
             toggleImageVisibility(update.view);
         }
     })
-]
+];

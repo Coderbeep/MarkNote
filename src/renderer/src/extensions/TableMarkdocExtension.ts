@@ -48,31 +48,22 @@ export const customMarkdownConfig = {
     {
       name: customBlock,
       parse(cx, line) {
-        // Check if the line starts with the '{% table %}' marker
         const startMarker = '{% table %}'
         if (!line.text.trim().startsWith(startMarker)) {
           return false
         }
 
         const from = cx.lineStart + line.pos
-
-        // Mark the start of the block
         cx.addElement(cx.elt(customBlockMark, from, from + startMarker.length))
 
-        // Find the end of the block
         const to = findCustomBlockEnd(cx, line)
         if (to === -1) {
           return false
         }
 
-        // Mark the end of the block
         cx.addElement(cx.elt(customBlockMark, to - '{% /table %}'.length, to))
-        // Add the custom block element
         cx.addElement(cx.elt(customBlock, from, to))
-
-        // Move to the next line after the block
         cx.nextLine()
-
         return true
       }
     }
@@ -86,7 +77,10 @@ const markdocTableField = StateField.define({
     return Decoration.none
   },
   update(decorations, transaction) {
-    decorations = decorations.map(transaction.changes)
+    if (transaction.docChanged) {
+			return Decoration.none;
+		}
+
     for (let effect of transaction.effects) {
       if (effect.is(toggleMarkdocTableEffect)) {
         decorations = effect.value
@@ -94,7 +88,7 @@ const markdocTableField = StateField.define({
     }
     return decorations
   },
-  provide: (field) => EditorView.decorations.from(field)
+  provide: field => EditorView.decorations.from(field)
 })
 
 function createTableDecorations(view) {
@@ -151,7 +145,7 @@ class TableWidget extends WidgetType {
 export const MarkdocTableExtension = [
   markdocTableField,
   EditorView.updateListener.of((update) => {
-    if (update.selectionSet) {
+    if (update.docChanged || update.selectionSet) {
       toggleTableVisibility(update.view)
     }
   })
