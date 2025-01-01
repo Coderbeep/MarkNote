@@ -12,7 +12,7 @@ import CodeMirror, {
   keymap,
   ReactCodeMirrorRef
 } from '@uiw/react-codemirror'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import '../assets/Editor.scss'
 
 
@@ -118,7 +118,7 @@ const Editor = ({ text, setText }) => {
   const basicSetup = markdown({
     base: markdownLanguage,
     codeLanguages: languages,
-    extensions: [frontmatter, Table, customMarkdownConfig]
+    extensions: [frontmatter, Table, customMarkdownConfig],
   })
 
   return (
@@ -138,7 +138,6 @@ const Editor = ({ text, setText }) => {
           ]}
           className="h-full"
           ref={cmRef}
-          onChange={(e) => {console.log(e)}}
         />
       </div>
     </div>

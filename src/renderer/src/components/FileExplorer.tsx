@@ -1,68 +1,91 @@
 import { FileItem } from '@shared/models';
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useRef } from 'react';
 import { GoSearch, GoPlus, GoFile, GoFileDirectory } from 'react-icons/go';
 
+const MemoizedGoFile = memo(GoFile);
+const MemoizedGoFileDirectory = memo(GoFileDirectory);
 interface FileExplorerProps {
     directoryPath: string;
     onFileSelect: (filePath: string) => void;
 }
 
-interface FileItemProps {
-    file: FileItem;
-    openDirectories: Record<string, boolean>;
-    onFileSelect: (filePath: string) => void;
-    onDirectorySelect: (directoryPath: string) => void;
-    level: number;
+interface ListFileProps { 
+    file: FileItem; 
+    onFileSelect: (filePath: string) => void; 
+    level: number; 
 }
 
-const FileItemComponent = memo(({ file, openDirectories, onFileSelect, onDirectorySelect, level }: FileItemProps) => {
-    return (
-        <div>
-            <div
-                className='file-explorer-item'
-                style={{ marginLeft: `${level}em` }}
-                onClick={() => {
-                    if (file.isDirectory) {
-                        onDirectorySelect(file.path);
-                    } else {
-                        onFileSelect(file.path);
-                    }
-                }}
-            >
-                {file.isDirectory ? <GoFileDirectory /> : <GoFile />}
-                <span> {file.filename} </span>
-            </div>
+interface ListDirectoryProps { 
+    file: FileItem; 
+    onDirectorySelect: (directoryPath: string) => void; 
+    onFileSelect: (filePath: string) => void; 
+    level: number; 
+    isOpen: boolean | undefined;
+}
 
-            {file.isDirectory && openDirectories[file.path] && file.children && file.children.map((childFile) => (
-                <FileItemComponent
+const ListFile = ({ file, onFileSelect, level }: ListFileProps) => (
+    <div
+        className='file-explorer-item'
+        style={{ marginLeft: `${level}em` }}
+        onClick={() => onFileSelect(file.path)}
+    >
+        <MemoizedGoFile />
+        <span> {file.filename} </span>
+    </div>
+);
+
+const ListDirectory = ({ file, onDirectorySelect, onFileSelect, level, isOpen }: ListDirectoryProps) => (
+    <div>
+        <div
+            className='file-explorer-item'
+            style={{ marginLeft: `${level}em` }}
+            onClick={() => onDirectorySelect(file.path)}
+        >
+            <MemoizedGoFileDirectory />
+            <span> {file.filename} </span>
+        </div>
+        {isOpen && file.children && file.children.map((childFile) => (
+            childFile.isDirectory ? (
+                <ListDirectory
                     key={childFile.path}
                     file={childFile}
-                    openDirectories={openDirectories}
-                    onFileSelect={onFileSelect}
                     onDirectorySelect={onDirectorySelect}
-                    level={level + 1} />
-            ))}
-        </div>
-    );
-});
+                    onFileSelect={onFileSelect}
+                    level={level + 1}
+                    isOpen={childFile.isOpen}
+                />
+            ) : (
+                <ListFile
+                    key={childFile.path}
+                    file={childFile}
+                    onFileSelect={onFileSelect}
+                    level={level + 1}
+                />
+            )
+        ))}
+    </div>
+);
 
 export const FileExplorer = memo(({ directoryPath, onFileSelect }: FileExplorerProps) => {
     const [files, setFiles] = useState<FileItem[]>([]);
-    const [openDirectories, setOpenDirectories] = useState<Record<string, boolean>>({});
+    const folderCache = useRef<Map<string, FileItem[]>>(new Map());
+    const expandedDirectories = useRef<Set<string>>(new Set());
+    const fileLookup = useRef<Map<string, FileItem>>(new Map());
 
-    const fetchFiles = async (directoryPath: string) => {
-        try {
-            const result = await window['api'].getFiles(directoryPath);
-            return result;
-        } catch (err) {
-            console.error('Error fetching files:', err);
-            return [];
+    const fetchFilesCache = async (directoryPath: string): Promise<FileItem[]> => {
+        if (folderCache.current.has(directoryPath)) {
+            return folderCache.current.get(directoryPath) as FileItem[];
         }
+        const data = await window['api'].getFiles(directoryPath);
+        folderCache.current.set(directoryPath, data);
+        data.forEach(file => fileLookup.current.set(file.path, file));
+        return data;
     };
+    
 
     useEffect(() => {
         const loadFiles = async () => {
-            const result = await fetchFiles(directoryPath);
+            const result = await fetchFilesCache(directoryPath);
             setFiles(result);
         };
 
@@ -70,62 +93,37 @@ export const FileExplorer = memo(({ directoryPath, onFileSelect }: FileExplorerP
     }, [directoryPath]);
 
     const onDirectorySelect = async (directoryPath: string) => {
-        const isOpen = openDirectories[directoryPath] || false;
-
-        if (isOpen) {
-            setOpenDirectories(prevState => ({
-                ...prevState,
-                [directoryPath]: false,
-            }));
-
-            setFiles(prevFiles => collapseDirectory(prevFiles, directoryPath));
+        if (expandedDirectories.current.has(directoryPath)) {
+            expandedDirectories.current.delete(directoryPath);
+            const updatedFiles = collapseDirectory(files, directoryPath);
+            setFiles(updatedFiles);
         } else {
-            const children = await fetchFiles(directoryPath);
-
-            setFiles(prevFiles => expandDirectory(prevFiles, directoryPath, children));
-            setOpenDirectories(prevState => ({
-                ...prevState,
-                [directoryPath]: true,
-            }));
+            const children = await fetchFilesCache(directoryPath);
+            expandedDirectories.current.add(directoryPath);
+            const updatedFiles = expandDirectory(files, directoryPath, children);
+            setFiles(updatedFiles);
         }
-    };
-
-    const collapseDirectory = (files: FileItem[], directoryPath: string): FileItem[] => {
-        let newFiles: FileItem[] = [];
-
-        for (const file of files) {
-            if (file.path === directoryPath) {
-                newFiles.push({ ...file, isOpen: false, children: [] });
-                continue;
-            }
-            if (file.path.startsWith(directoryPath)) {
-                setOpenDirectories(prevState => {
-                    const newState = {...prevState};
-                    delete newState[file.path];
-                    return newState
-                })
-                continue
-            }
-                
-            newFiles.push(file)
-        }
-        return newFiles;
     };
 
     const expandDirectory = (files: FileItem[], directoryPath: string, children: FileItem[]): FileItem[] => {
-        let newFiles: FileItem[] = [];
-        for (const file of files) {
-            newFiles.push(file);
-            if (file.path === directoryPath) {
-                newFiles.push(
-                    ...children.map(child => ({
-                        ...child,
-                        level: (file.level || 0) + 1,
-                    }))
-                );
-            }
+
+        const file = fileLookup.current.get(directoryPath);
+        if (file) {
+            file.isOpen = true;
+            file.children = children;
+            return [...files];
         }
-        return newFiles;
+        return files;
+    };
+
+    const collapseDirectory = (files: FileItem[], directoryPath: string): FileItem[] => {
+        const file = fileLookup.current.get(directoryPath);
+        if (file) {
+            file.isOpen = false;
+            file.children = [];
+            return [...files];
+        }
+        return files;
     };
 
     return (
@@ -144,14 +142,23 @@ export const FileExplorer = memo(({ directoryPath, onFileSelect }: FileExplorerP
             </div>
             <div className='file-explorer-list'>
                 {files.map((file) => (
-                    <FileItemComponent
-                        key={file.path}
-                        file={file}
-                        openDirectories={openDirectories}
-                        onFileSelect={onFileSelect}
-                        onDirectorySelect={onDirectorySelect}
-                        level={file.level || 0}
-                    />
+                    file.isDirectory ? (
+                        <ListDirectory
+                            key={file.path}
+                            file={file}
+                            onDirectorySelect={onDirectorySelect}
+                            onFileSelect={onFileSelect}
+                            level={0}
+                            isOpen={expandedDirectories.current.has(file.path)}
+                        />
+                    ) : (
+                        <ListFile
+                            key={file.path}
+                            file={file}
+                            onFileSelect={onFileSelect}
+                            level={0}
+                        />
+                    )
                 ))}
             </div>
         </div>
